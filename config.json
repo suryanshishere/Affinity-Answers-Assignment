@@ -1,0 +1,5 @@
+{
+  "base_url": "https://mdcomputers.in/",
+  "timeout_seconds": 30,
+  "output_file": "outputs.json"
+}
