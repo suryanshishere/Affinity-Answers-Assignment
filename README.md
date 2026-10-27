@@ -1,6 +1,6 @@
 # Affinity Answers Assignments
 
-Run all commands from the project folder.
+All of the assignments questions solution are mentioned below along with their code files.
 
 ## Python Assignment
 
@@ -21,10 +21,33 @@ python main.py
 
 Press Enter at the output prompt to use `outputs.json`.
 
+### Design choices
+
+- I used `requests` to fetch pages and Beautiful Soup to read product details from the HTML.
+- Separate functions keep the code easy to follow.
+- The script checks all result pages and removes duplicates using product URLs.
+- Timeouts, delays, and retries handle slow requests and rate limits. These settings are in `config.json`.
+- Current and original prices are saved separately, as shown on the website.
+
+### Why JSON as Output I chose?
+
+I chose JSON because it is easy to read and use in Python. Each product has named fields for its name, link, and prices. It also supports missing values and currency symbols.
+
 ## SQL Assignment
 
-1. Find the queries in [sql_assignment.sql](sql_assignment.sql).
-2. Read the comments for explanations.
+Queries: [sql_assignment.sql](sql_assignment.sql). Comments explain the joins, filters, aggregation, and pagination.
+
+Use a MySQL-compatible client such as MySQL Workbench to connect to the public Rfam database. No local database import is required.
+
+1. Create a connection using Standard TCP/IP with these settings from the [Rfam documentation](https://docs.rfam.org/en/latest/database.html):
+   - Hostname: `mysql-rfam-public.ebi.ac.uk`
+   - Port: `4497`
+   - Username: `rfamro`
+   - Password: leave blank
+   - Default schema/database: `Rfam`
+2. Connect and open `sql_assignment.sql` in the SQL editor.
+3. Run the numbered answer queries individually, or execute the whole file. The initial queries only show sample data for exploration.
+4. View the results in the client's result grid. The family query returns page 9 using `LIMIT 15 OFFSET 120`.
 
 ## Shell Assignment
 
