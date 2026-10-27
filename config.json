@@ -1,5 +1,8 @@
 {
   "base_url": "https://mdcomputers.in/",
   "timeout_seconds": 30,
+  "request_delay_seconds": 2,
+  "max_retries": 3,
+  "retry_delay_seconds": 10,
   "output_file": "outputs.json"
 }

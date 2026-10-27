@@ -1,5 +1,7 @@
 import json
 import sys
+import time
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -15,23 +17,53 @@ def text_of(element):
     return " ".join(element.get_text(" ", strip=True).split()) if element is not None else None
 
 
+def fetch_page(session, search_term, page, config):
+    # Retry HTTP 429 responses using the server's Retry-After value, in seconds or as a date.
+    # If it is missing or invalid, increase the wait after each retry and stop at the retry limit.
+    for attempt in range(config["max_retries"] + 1):
+        print(
+            f"Fetching page {page}..." if attempt == 0
+            else f"Retrying page {page} ({attempt}/{config['max_retries']})...",
+            flush=True,
+        )
+        response = session.get(
+            config["base_url"],
+            params={"route": "product/search", "search": search_term, "page": page},
+            timeout=config["timeout_seconds"],
+        )
+        if response.status_code != 429 or attempt == config["max_retries"]:
+            response.raise_for_status()
+            return response
+
+        delay = config["retry_delay_seconds"] * (2 ** attempt)
+        retry_after = response.headers.get("Retry-After", "").strip()
+        if retry_after:
+            try:
+                if retry_after.isdecimal():
+                    delay = int(retry_after)
+                else:
+                    delay = max(0, parsedate_to_datetime(retry_after).timestamp() - time.time())
+            except (ValueError, TypeError, OverflowError):
+                pass
+
+        response.close()
+        print(f"Rate limited on page {page}. Retrying in {delay:g} seconds...", file=sys.stderr, flush=True)
+        time.sleep(delay)
+
+
 def search_products(search_term, config):
     # Fetch all pages using one session to reuse connections.
     # Requests encodes the search term; timeouts and HTTP checks handle request failures.
     # Extract product details, keeping current and original prices separate.
     # Use a set for fast duplicate checks and stop after the last page.
+    # Pause between pages to reduce rate limiting and show progress while working.
     products = []
     seen_urls = set()
     page = 1
 
     with requests.Session() as session:
         while True:
-            response = session.get(
-                config["base_url"],
-                params={"route": "product/search", "search": search_term, "page": page},
-                timeout=config["timeout_seconds"],
-            )
-            response.raise_for_status()
+            response = fetch_page(session, search_term, page, config)
             soup = BeautifulSoup(response.text, "html.parser")
             content = soup.select_one("#content")
             if content is None or content.select_one("#input-search") is None:
@@ -62,9 +94,12 @@ def search_products(search_term, config):
                     "original_price": original_price,
                 })
 
+            print(f"Page {page} complete. Total products collected: {len(products)}", flush=True)
             if content.select_one(".pagination li.active + li a[href]") is None:
                 break
             page += 1
+            print(f"Waiting {config['request_delay_seconds']:g} seconds before the next page...", flush=True)
+            time.sleep(config["request_delay_seconds"])
 
     return products
 
@@ -72,7 +107,7 @@ def search_products(search_term, config):
 def main():
     # Load settings on each run and ask for the search term and output path.
     # Repeat invalid input prompts, then fetch all results before saving.
-    # Write UTF-8 JSON to keep currency symbols readable and report any errors.
+    # Show search and save status, write readable UTF-8 JSON, and report any errors.
     try:
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
         while True:
@@ -95,13 +130,15 @@ def main():
             except (ValueError, OSError) as error:
                 print(f"Error: {error}", file=sys.stderr)
 
+        print(f"Searching for '{search_term}'...", flush=True)
         products = search_products(search_term, config)
+        print(f"Saving results to {output_path}...", flush=True)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("w", encoding="utf-8") as output:
             json.dump(products, output, ensure_ascii=False, indent=2)
             output.write("\n")
 
-        print(f"Saved {len(products)} products to {output_path}")
+        print(f"Saved {len(products)} products to {output_path}", flush=True)
         return 0
     except (requests.RequestException, OSError, ValueError, KeyError, EOFError) as error:
         print(f"Error: {error or 'Input ended before the search was complete.'}", file=sys.stderr)
