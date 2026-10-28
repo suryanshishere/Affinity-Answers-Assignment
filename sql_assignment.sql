@@ -6,13 +6,6 @@ SELECT * FROM rfamseq LIMIT 5;
 SELECT * FROM family LIMIT 5;
 SELECT * FROM full_region LIMIT 5;
 
--- just checking how the tables samples look like
-SELECT DISTINCT species
-FROM taxonomy
-WHERE species LIKE 'Acacia %'
-ORDER BY species
-LIMIT 20;
-
 -- 1. Types of Acacia plants found in the taxonomy table
 -- Count the distinct species names that start with 'Acacia' using the LIKE 'Acacia %' condition.
 SELECT

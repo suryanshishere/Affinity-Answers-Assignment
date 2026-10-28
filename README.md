@@ -1,5 +1,6 @@
 # Affinity Answers Assignments
 
+Video walkthrough: https://www.loom.com/share/6b0ffa45d0504be59bc7d42d545dd11f
 All of the assignments questions solution are mentioned below along with their code files.
 
 ## Python Assignment

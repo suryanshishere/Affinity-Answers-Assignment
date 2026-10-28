@@ -35,5 +35,5 @@ gawk --csv '
             sort_year, $2, $5, year
     }
 ' "$tmp_file" |
-sort -t $'\t' -k1,1n -k2,2 |
+sort -t $'\t' -k1,1n -k2,2 | # Here sorting on founding year, and than company name
 cut -f2-
