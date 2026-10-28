@@ -1,7 +1,8 @@
 # Affinity Answers Assignments
 
-Video walkthrough: https://www.loom.com/share/6b0ffa45d0504be59bc7d42d545dd11f
-All of the assignments questions solution are mentioned below along with their code files.
+Solutions to all assignment questions are documented below, along with links to the corresponding code files.
+
+**Video walkthrough:** [Watch on Loom](https://www.loom.com/share/6b0ffa45d0504be59bc7d42d545dd11f)
 
 ## Python Assignment
 
